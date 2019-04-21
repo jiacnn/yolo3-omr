@@ -16,3 +16,13 @@ note:0.8691
 
 duration_acc :0.963
 
+----------
+
+### TODO:
+- [x] svg to png,get duration
+- [x] get pitch
+- [x] complicated music sheet
+
+- yolo add pitch classification
+- more robust
+
