@@ -160,7 +160,7 @@ class YOLOLayer(nn.Module):
             tduration = tduration[mask]
             tpitch = tpitch[mask]
             if x.is_cuda:
-                tx, ty, tw, th, mask, tcls ,tduration,tpitch= tx.cuda(), ty.cuda(), tw.cuda(), th.cuda(), mask.cuda(), tcls.cuda(),tduration.cuda()
+                tx, ty, tw, th, mask, tcls ,tduration,tpitch= tx.cuda(), ty.cuda(), tw.cuda(), th.cuda(), mask.cuda(), tcls.cuda(),tduration.cuda(),tpitch.cuda()
             # Compute losses
             nT = sum([len(x) for x in targets])  # number of targets
             nM = mask.sum().float()  # number of anchors (assigned to targets)
