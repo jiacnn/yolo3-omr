@@ -80,8 +80,8 @@ class YOLOLayer(nn.Module):
         nA = len(anchors)
         self.anchors = anchors
         self.nA = nA  # number of anchors (3)
-        self.nC = nC  # number of classes (80)
-        self.bbox_attrs = 22
+        self.nC = nC  # number of classes (10)
+        self.bbox_attrs = 46
         self.img_dim = img_dim  # from hyperparams in cfg file, NOT from parser
 
         if anchor_idxs[0] == (nA * 2):  # 6
@@ -115,7 +115,7 @@ class YOLOLayer(nn.Module):
             self.weights, self.loss_means = self.weights.cuda(), self.loss_means.cuda()
         # p.view(12, 255, 13, 13) -- > (12, 3, 13, 13, 80)  # (bs, anchors, grid, grid, classes + xywh)
         p = p.view(bs, self.nA, self.bbox_attrs, nG, nG).permute(0, 1, 3, 4, 2).contiguous()  # prediction
-        
+
         # Get outputs
         x = torch.sigmoid(p[..., 0])  # Center x
         y = torch.sigmoid(p[..., 1])  # Center y
@@ -135,9 +135,10 @@ class YOLOLayer(nn.Module):
         # Add offset and scale with anchors (in grid space, i.e. 0-13)
         pred_boxes = FT(bs, self.nA, nG, nG, 4)
         pred_conf = p[..., 4]  # Conf
-        pred_cls = p[..., 5:12]  # Class
+        pred_cls = p[..., 5:15]  # Class
 
-        pred_duration = p[...,12:]# duration[0,0,0,0,0.5,0.4....]
+        pred_duration = p[...,15:25]# duration[0,0,0,0,0.5,0.4....]
+        pred_pitch = p[...,25:]
         # Training
         if targets is not None:
             MSELoss = nn.MSELoss()
@@ -152,13 +153,14 @@ class YOLOLayer(nn.Module):
                 pred_boxes[..., 2] = x.data + gx + width / 2
                 pred_boxes[..., 3] = y.data + gy + height / 2
 
-            tx, ty, tw, th, mask, tcls, tduration, TP, FP, FN, TC = \
+            tx, ty, tw, th, mask, tcls, tduration,tpitch, TP, FP, FN, TC = \
                 build_targets(pred_boxes, pred_conf, pred_cls, targets, self.scaled_anchors, self.nA, self.nC, nG,
                               batch_report)
             tcls = tcls[mask]
             tduration = tduration[mask]
+            tpitch = tpitch[mask]
             if x.is_cuda:
-                tx, ty, tw, th, mask, tcls ,tduration= tx.cuda(), ty.cuda(), tw.cuda(), th.cuda(), mask.cuda(), tcls.cuda(),tduration.cuda()
+                tx, ty, tw, th, mask, tcls ,tduration,tpitch= tx.cuda(), ty.cuda(), tw.cuda(), th.cuda(), mask.cuda(), tcls.cuda(),tduration.cuda()
             # Compute losses
             nT = sum([len(x) for x in targets])  # number of targets
             nM = mask.sum().float()  # number of anchors (assigned to targets)
@@ -173,10 +175,11 @@ class YOLOLayer(nn.Module):
                 # lconf = k * BCEWithLogitsLoss(pred_conf[mask], mask[mask].float())
                 lconf = (k * 10) * BCEWithLogitsLoss(pred_conf, mask.float())
                 lduration = (k/10)*CrossEntropyLoss(pred_duration[mask],torch.argmax(tduration,1))
+                lpitch = (k/10)*CrossEntropyLoss(pred_pitch[mask],torch.argmax(tpitch,1))
                 lcls = (k / 10) * CrossEntropyLoss(pred_cls[mask], torch.argmax(tcls, 1))
                 # lcls = (k * 10) * BCEWithLogitsLoss(pred_cls[mask], tcls.float())
             else:
-                lx, ly, lw, lh, lcls, lconf ,lduration= FT([0]), FT([0]), FT([0]), FT([0]), FT([0]), FT([0]), FT([0])
+                lx, ly, lw, lh, lcls, lconf ,lduration,lpitch= FT([0]), FT([0]), FT([0]), FT([0]), FT([0]), FT([0]), FT([0]) ,FT([0])
 
             # Add confidence loss for background anchors (noobj)
             # lconf += k * BCEWithLogitsLoss(pred_conf[~mask], mask[~mask].float())
@@ -185,12 +188,12 @@ class YOLOLayer(nn.Module):
             balance_losses_flag = False
             if balance_losses_flag:
                 k = 1 / self.loss_means.clone()
-                loss = (lx * k[0] + ly * k[1] + lw * k[2] + lh * k[3] + lconf * k[4] + lcls * k[5]+lduration * k[6]) / k.mean()
+                loss = (lx * k[0] + ly * k[1] + lw * k[2] + lh * k[3] + lconf * k[4] + lcls * k[5]+lduration * k[6]+lpitch * k[7]) / k.mean()
 
                 self.loss_means = self.loss_means * 0.99 + \
-                                  FT([lx.data, ly.data, lw.data, lh.data, lconf.data, lcls.data,lduration]) * 0.01
+                                  FT([lx.data, ly.data, lw.data, lh.data, lconf.data, lcls.data,lduration,lpitch]) * 0.01
             else:
-                loss = lx + ly + lw + lh + lconf + lcls +lduration
+                loss = lx + ly + lw + lh + lconf + lcls +lduration+lpitch
 
             # Sum False Positives from unassigned anchors
             FPe = torch.zeros(self.nC)
@@ -200,7 +203,7 @@ class YOLOLayer(nn.Module):
                     FP_classes = torch.argmax(pred_cls[~mask][i], 1)
                     FPe = torch.bincount(FP_classes, minlength=self.nC).float().cpu()  # extra FPs
 
-            return loss, loss.item(), lx.item(), ly.item(), lw.item(), lh.item(), lconf.item(), lcls.item(), lduration.item(),\
+            return loss, loss.item(), lx.item(), ly.item(), lw.item(), lh.item(), lconf.item(), lcls.item(), lduration.item(),lpitch.item(),\
                    nT, TP, FP, FPe, FN, TC
 
         else:
@@ -225,7 +228,7 @@ class Darknet(nn.Module):
         self.module_defs[0]['height'] = img_size
         self.hyperparams, self.module_list = create_modules(self.module_defs)
         self.img_size = img_size
-        self.loss_names = ['loss', 'x', 'y', 'w', 'h', 'conf', 'cls', 'duration','nT', 'TP', 'FP', 'FPe', 'FN', 'TC']
+        self.loss_names = ['loss', 'x', 'y', 'w', 'h', 'conf', 'cls', 'duration','pitch','nT', 'TP', 'FP', 'FPe', 'FN', 'TC']
 
     def forward(self, x, targets=None, batch_report=True):
         is_training = targets is not None

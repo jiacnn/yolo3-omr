@@ -119,7 +119,7 @@ class load_images_and_labels():  # for training
             if img is None:
                 print('nooooooooooimages')
                 continue
-            
+
             augment_hsv = True
             if self.augment and augment_hsv:
                 # SV augmentation by 50%
@@ -146,28 +146,42 @@ class load_images_and_labels():  # for training
             img, ratio, padw, padh = resize_square(img, height=height, color=(127.5, 127.5, 127.5))
 
             # Load labels
-            name_classes = load_classes('/home/jiaxiang/myproject/yolov3/cfg/duration.names')
+            name_classes = load_classes('/Users/jx/Desktop/jjjjjxxxx/omr_yolo3/cfg/new_duration.names')
+            pitch_classes = load_classes('/Users/jx/Desktop/jjjjjxxxx/omr_yolo3/cfg/pitch.names')
             if os.path.isfile(label_path):
 
-                labels0 = np.loadtxt(label_path, dtype=np.float32).reshape(-1, 6)
+                labels0 = np.loadtxt(label_path, dtype=np.float32).reshape(-1, 7)
                 # Normalized xywh to pixel xyxy format
                 labels = labels0.copy()
-                labels[:, 1] = ratio * w * (labels0[:, 1] - labels0[:, 3] / 2) + padw
-                labels[:, 2] = ratio * h * (labels0[:, 2] - labels0[:, 4] / 2) + padh
-                labels[:, 3] = ratio * w * (labels0[:, 1] + labels0[:, 3] / 2) + padw
-                labels[:, 4] = ratio * h * (labels0[:, 2] + labels0[:, 4] / 2) + padh
+               # labels[:, 1] = ratio * w * (labels0[:, 1] - labels0[:, 3] / 2) + padw
+                #labels[:, 2] = ratio * h * (labels0[:, 2] - labels0[:, 4] / 2) + padh
+                #labels[:, 3] = ratio * w * (labels0[:, 1] + labels0[:, 3] / 2) + padw
+                #labels[:, 4] = ratio * h * (labels0[:, 2] + labels0[:, 4] / 2) + padh
+                labels[:, 1] = ratio * labels0[:,1] + padw
+                labels[:, 2] = ratio * labels0[:,2] + padh
+                labels[:, 3] = ratio *labels0[:,3] + padw
+                labels[:, 4] = ratio * labels[:,4] + padh
                 durations = []
+                pitchs = []
                 for i in labels0[:,5]:
                    if float(i)==float(1):
-                       durations.append(9)  
+                       durations.append(9)
                    elif str(i) not in name_classes and str(i)!='0.0':
                        durations.append(6)
                    else:
                        for idx,j in enumerate(name_classes):
-                          if float(i)== float(j):
+                           if float(i)== float(j):
                              durations.append(idx)
-
-                labels[:, 5] = durations                      
+                ##超出音高范围或者没有音高
+                for i in labels0[:,6]:
+                    if str(int(i)) in pitch_classes:
+                            pitchs.append(int(i))
+                    elif int(i)>15:
+                        pitchs.append(15)
+                    else:
+                        pitchs.append(-5)
+                labels[:, 5] = durations
+                labels[:, 6] = pitchs
             else:
                 labels = np.array([])
 

@@ -195,7 +195,7 @@ def bbox_iou(box1, box2, x1y1x2y2=True):
 
 def build_targets(pred_boxes, pred_conf, pred_cls, target, anchor_wh, nA, nC, nG, batch_report):
     """
-    returns nT, nCorrect, tx, ty, tw, th, tconf, tcls,tduration
+    returns nT, nCorrect, tx, ty, tw, th, tconf, tcls,tduration,tpitch
     """
     nB = len(target)  # number of images in batch
     nT = [len(x) for x in target]  # torch.argmin(target[:, :, 5)  # targets per image
@@ -206,11 +206,14 @@ def build_targets(pred_boxes, pred_conf, pred_cls, target, anchor_wh, nA, nC, nG
     tconf = torch.ByteTensor(nB, nA, nG, nG).fill_(0)
     tcls = torch.ByteTensor(nB, nA, nG, nG, nC).fill_(0)  # nC = number of classes
     tduration = torch.ByteTensor(nB,nA,nG,nG,10).fill_(0)
+    tpitch = torch.ByteTensor(nB,nA,nG,nG,21).fill_(0)
+    TP = torch.ByteTensor(nB, max(nT)).fill_(0)
     TP = torch.ByteTensor(nB, max(nT)).fill_(0)
     FP = torch.ByteTensor(nB, max(nT)).fill_(0)
     FN = torch.ByteTensor(nB, max(nT)).fill_(0)
     TC = torch.ShortTensor(nB, max(nT)).fill_(-1)  # target category
-    TD = torch.ShortTensor(nB,max(nT)).fill_(-1)
+    #TD = torch.ShortTensor(nB,max(nT)).fill_(-1) #duariton_class
+    #T_P = torch.ShortTensor(nB,max(nT)).fill(-1) #pitch_clss
     for b in range(nB):
         nTb = nT[b]  # number of targets
         if nTb == 0:
@@ -256,8 +259,8 @@ def build_targets(pred_boxes, pred_conf, pred_cls, target, anchor_wh, nA, nC, nG
                 continue
             i = 0
 
-        tc, gx, gy, gw, gh,td = t[:, 0].long(), t[:, 1] * nG, t[:, 2] * nG, t[:, 3] * nG, t[:, 4] * nG,t[:,5].long()
-        
+        tc, gx, gy, gw, gh,td,t_p = t[:, 0].long(), t[:, 1] * nG, t[:, 2] * nG, t[:, 3] * nG, t[:, 4] * nG,t[:,5].long(),t[:,6].long()
+
         # Coordinates
         tx[b, a, gj, gi] = gx - gi.float()
         ty[b, a, gj, gi] = gy - gj.float()
@@ -273,6 +276,7 @@ def build_targets(pred_boxes, pred_conf, pred_cls, target, anchor_wh, nA, nC, nG
         tcls[b, a, gj, gi, tc] = 1
         tconf[b, a, gj, gi] = 1
         tduration[b, a, gj, gi, td] = 1
+        tpitch[b, a, gj, gi,t_p] = 1
         if batch_report:
             # predicted classes and confidence
             tb = torch.cat((gx - gw / 2, gy - gh / 2, gx + gw / 2, gy + gh / 2)).view(4, -1).t()  # target boxes
@@ -284,7 +288,7 @@ def build_targets(pred_boxes, pred_conf, pred_cls, target, anchor_wh, nA, nC, nG
             FP[b, i] = (pconf > 0.5) & (TP[b, i] == 0)  # coordinates or class are wrong
             FN[b, i] = pconf <= 0.5  # confidence score is too low (set to zero)
 
-    return tx, ty, tw, th, tconf, tcls,tduration, TP, FP, FN, TC
+    return tx, ty, tw, th, tconf, tcls,tduration,tpitch,  TP, FP, FN, TC
 
 
 def non_max_suppression(prediction, conf_thres=0.5, nms_thres=0.4):

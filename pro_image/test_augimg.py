@@ -78,7 +78,7 @@ def Start_transfrom(input_image):
     #ia.seed(100)
     #seq_det = self.Transform_method
 
-    save_path = '/home/jx/test_chard1'
+    save_path = 'data1'
     image = cv2.imread(input_image)
     image_name = input_image.split('/')[-1:]
     label = input_image.replace('png', 'txt')
@@ -113,7 +113,7 @@ def Start_transfrom(input_image):
     return
 def main():
    # ia.seed(100)
-    imgs = glob.glob('/home/jx/下载/generated_data/*.png')
+    imgs = glob.glob('data/*.png')
 
 
     pool = Pool(8)

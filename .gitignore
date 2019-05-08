@@ -9,10 +9,12 @@
 *.png
 *.HEIC
 *.weights
+*.ipynb
 *.pt
 *.gz
 /data/crop1_raw_imgs/
 /data/crop1/raw_img/
+/pro_image/data/
 results.txt
 temp-plot.html
 /imgs/

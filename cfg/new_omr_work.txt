@@ -1,0 +1,51 @@
+乐谱分类字典
+
+大类：共10类
+0: sharp
+1: flat
+2: natural
+3: Clef_G
+4: Clef_F
+5: Clef_C
+6: Barline
+7: Timesig
+8: Note
+9: Rest
+
+
+小类:
+Note类中的时值类: 共10类
+0: eighth
+1: quarter
+2: 16th
+3: half
+4: quarter-dot
+5: eighth-dot
+6: half-dot
+7: whole
+8: 32nd
+100: others
+
+Note类中的音高相对位置类: 共21类
+-5至15
+
+Rest类中的时值类: 共10类
+0: eighth
+1: quarter
+2: 16th
+3: half
+4: quarter-dot
+5: eighth-dot
+6: half-dot
+7: whole
+8: 32nd
+100: others
+
+
+train 0-22000.png
+test  22000-~ .png
+
+去掉没有音符的图片后
+all_png 19926
+训练 16000
+测试  3992

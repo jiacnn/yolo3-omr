@@ -1,6 +1,6 @@
 import os
 import glob
-all_txt = glob.glob('crop1_raw_img/*.txt')
+all_txt = glob.glob('../pro_image/data/*.txt')
 for txt in all_txt:
     a = open(txt,'r')
     lines = a.readlines()
