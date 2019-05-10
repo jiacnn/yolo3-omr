@@ -12,13 +12,13 @@ f_path = os.path.dirname(os.path.realpath(__file__)) + '/'
 parser = argparse.ArgumentParser()
 # Get data configuration
 
-parser.add_argument('-image_folder', type=str, default='data/crop1_raw_img1', help='path to images')
+parser.add_argument('-image_folder', type=str, default='data1', help='path to images')
 parser.add_argument('-output_folder', type=str, default='output', help='path to outputs')
 parser.add_argument('-plot_flag', type=bool, default=True)
 parser.add_argument('-txt_out', type=bool, default=False)
 
 parser.add_argument('-cfg', type=str, default=f_path + 'cfg/yolo3-832.cfg', help='cfg file path')
-parser.add_argument('-class_path', type=str, default=f_path + 'data/omr.names', help='path to class label file')
+parser.add_argument('-class_path', type=str, default=f_path + 'data/new_omr.names', help='path to class label file')
 parser.add_argument('-conf_thres', type=float, default=0.3, help='object confidence threshold')
 parser.add_argument('-nms_thres', type=float, default=0.50, help='iou threshold for non-maximum suppression')
 parser.add_argument('-batch_size', type=int, default=1, help='size of the batches')
@@ -101,7 +101,7 @@ def main(opt):
 
         # Draw bounding boxes and labels of detections
         if detections is not None:
-            unique_classes = detections[:, -3].cpu().unique()
+            unique_classes = detections[:, -5].cpu().unique()
             bbox_colors = random.sample(color_list, len(unique_classes))
 
             # write results to .txt file
@@ -113,7 +113,7 @@ def main(opt):
             for i in unique_classes:
                 n = (detections[:, -1].cpu() == i).sum()
                # print('%g %ss' % (n, classes[int(i)]))
-            for x1, y1, x2, y2, conf, cls_conf, cls_pred,duration_conf, duration_pred in detections:
+            for x1, y1, x2, y2, conf, cls_conf, cls_pred,duration_conf, duration_pred, pitch_conf, pitch_pred in detections:
                 # Rescale coordinates to original dimensions
                 box_h = ((y2 - y1) /unpad_h ) * img.shape[0]
                 box_w = ((x2 - x1) /unpad_w ) * img.shape[1]
@@ -131,13 +131,14 @@ def main(opt):
 
                 if opt.plot_flag:
                     # Add the bbox to the plot
-                    label = '%s%d' % (classes[int(cls_pred)] ,int(duration_pred))
+                    label = '%s %d %d' % (classes[int(cls_pred)] ,int(duration_pred),int(pitch_pred))
                     
                     color = bbox_colors[int(np.where(unique_classes == int(cls_pred))[0])]
                     plot_one_box([x1, y1, x2, y2], img, label=label, color=color)
 
         if opt.plot_flag:
             # Save generated image with detections
+            print(results_img_path)
             cv2.imwrite(results_img_path.replace('.bmp', '.jpg').replace('.tif', '.jpg'), img)
 
     if platform == 'darwin':  # MacOS (local)

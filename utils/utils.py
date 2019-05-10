@@ -344,8 +344,9 @@ def non_max_suppression(prediction, conf_thres=0.5, nms_thres=0.4):
         # for c in range(60):
         # shape_likelihood[:, c] = multivariate_normal.pdf(x, mean=mat['class_mu'][c, :2], cov=mat['class_cov'][c, :2, :2])
 
-        class_prob, class_pred = torch.max(F.softmax(pred[:, 5:12], 1), 1)
-        duration_prob, duration_pred = torch.max(F.softmax(pred[:,12:],1),1)
+        class_prob, class_pred = torch.max(F.softmax(pred[:, 5:15], 1), 1)
+        duration_prob, duration_pred = torch.max(F.softmax(pred[:,15:25],1),1)
+        pitch_prob, pitch_pred  = torch.max(F.softmax(pred[:,25:],1),1)
         v = ((pred[:, 4] > conf_thres) & (class_prob > .3))
         v = v.nonzero().squeeze()
         if len(v.shape) == 0:
@@ -357,6 +358,8 @@ def non_max_suppression(prediction, conf_thres=0.5, nms_thres=0.4):
 
         duration_prob = duration_prob[v]
         duration_pred = duration_pred[v]
+        pitch_prob = pitch_prob[v]
+        pitch_pred = pitch_pred[v]
         # If none are remaining => process next image
         nP = pred.shape[0]
         if not nP:
@@ -371,7 +374,9 @@ def non_max_suppression(prediction, conf_thres=0.5, nms_thres=0.4):
         pred[:, :4] = box_corner
 
         # Detections ordered as (x1, y1, x2, y2, obj_conf, class_prob, class_pred)
-        detections = torch.cat((pred[:, :5], class_prob.float().unsqueeze(1), class_pred.float().unsqueeze(1),duration_prob.float().unsqueeze(1),duration_pred.float().unsqueeze(1)), 1)
+        detections = torch.cat((pred[:, :5], class_prob.float().unsqueeze(1), class_pred.float().unsqueeze(1),
+                                duration_prob.float().unsqueeze(1),duration_pred.float().unsqueeze(1),
+                                pitch_prob.float().unsqueeze(1),pitch_pred.float().unsqueeze(1)), 1)
         # Iterate through all predicted classes
         unique_labels = detections[:, -3].cpu().unique()
         if prediction.is_cuda:

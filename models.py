@@ -215,7 +215,7 @@ class YOLOLayer(nn.Module):
 
             # If not in training phase return predictions
             output = torch.cat((pred_boxes.view(bs, -1, 4) * stride,
-                                torch.sigmoid(pred_conf.view(bs, -1, 1)),pred_cls.view(bs, -1, self.nC),pred_duration.view(bs,-1,10)), -1)
+                                torch.sigmoid(pred_conf.view(bs, -1, 1)),pred_cls.view(bs, -1, self.nC),pred_duration.view(bs,-1,10),pred_pitch.view(bs,-1,21)), -1)
             return output.data
 
 

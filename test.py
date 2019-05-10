@@ -8,8 +8,8 @@ parser = argparse.ArgumentParser(prog='test.py')
 parser.add_argument('-batch_size', type=int, default=8, help='size of each image batch')
 parser.add_argument('-cfg', type=str, default='cfg/yolo3-832.cfg', help='path to model config file')
 parser.add_argument('-data_config_path', type=str, default='cfg/omr.data', help='path to data config file')
-parser.add_argument('-weights_path', type=str, default='weights1/best.pt', help='path to weights file')
-parser.add_argument('-class_path', type=str, default='data/omr.names', help='path to class label file')
+parser.add_argument('-weights_path', type=str, default='weights/best.pt', help='path to weights file')
+parser.add_argument('-class_path', type=str, default='data/new_omr.names', help='path to class label file')
 parser.add_argument('-iou_thres', type=float, default=0.5, help='iou threshold required to qualify as detected')
 parser.add_argument('-conf_thres', type=float, default=0.3, help='object confidence threshold')
 parser.add_argument('-nms_thres', type=float, default=0.45, help='iou threshold for non-maximum suppression')
@@ -51,6 +51,7 @@ def main(opt):
     AP_accum, AP_accum_count = np.zeros(nC), np.zeros(nC)
     count = 0
     all_note = 0
+    count_p = 0
     for batch_i, (imgs, targets) in enumerate(dataloader):
 
         with torch.no_grad():
@@ -82,7 +83,7 @@ def main(opt):
                 target_boxes = xywh2xyxy(labels[:, 1:5]) * opt.img_size
 
                 detected = []
-                for *pred_bbox, conf, obj_conf, obj_pred, duration_conf,duration_pred in detections:
+                for *pred_bbox, conf, obj_conf, obj_pred, duration_conf,duration_pred ,pitch_conf, pitch_pred in detections:
 
                     pred_bbox = torch.FloatTensor(pred_bbox).view(1, -1)
                     # Compute iou with target boxes
@@ -95,10 +96,13 @@ def main(opt):
                         detected.append(best_i)
                     else:
                         correct.append(0)
-                    if iou[best_i] > opt.iou_thres and obj_pred == labels[best_i,0] and int(obj_pred)==6:
+                    if iou[best_i] > opt.iou_thres and obj_pred == labels[best_i,0] and int(obj_pred) in [8, 9]:
                         all_note +=1
-                    if iou[best_i] > opt.iou_thres and obj_pred == labels[best_i,0] and int(obj_pred)==6 and duration_pred==labels[best_i,5]:
+                    if iou[best_i] > opt.iou_thres and obj_pred == labels[best_i,0] and int(obj_pred) in [8, 9] and duration_pred==labels[best_i,5]:
                         count+=1
+                    if iou[best_i] > opt.iou_thres and obj_pred == labels[best_i,0] and int(obj_pred)in [8, 9] and pitch_pred==labels[best_i,6]:
+                        count_p+=1
+            # Compute Average Precision (AP) per class
             # Compute Average Precision (AP) per class
             AP, AP_class, R, P = ap_per_class(tp=correct, conf=detections[:, 4], pred_cls=detections[:, 6],
                                               target_cls=target_cls)
@@ -126,7 +130,8 @@ def main(opt):
     classes = load_classes(opt.class_path)  # Extracts class labels from file
     for i, c in enumerate(classes):
         print('%15s: %-.4f' % (c, AP_accum[i] / AP_accum_count[i]))
-    print('-----------darution_acc------- %f'%(count/all_note))
+    print('-----------duration_acc------- %f'%(count/all_note))
+    print('-----------pitch_acc------- %f'%(count_p/all_note))
     # Return mAP
     return mean_mAP, mean_R, mean_P
 
