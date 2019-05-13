@@ -42,17 +42,17 @@ def class_weights():  # frequency of each class in coco train2014
 
 
 def plot_one_box(x, img, color=None, label=None, line_thickness=None):  # Plots one bounding box on image img
-    tl = line_thickness or round(0.002 * max(img.shape[0:2])) + 1  # line thickness
+    tl = line_thickness or round(0.02 * max(img.shape[0:2])) + 1  # line thickness
     color = color or [random.randint(0, 255) for _ in range(3)]
     c1, c2 = (int(x[0]), int(x[1])), (int(x[2]), int(x[3]))
-    cv2.rectangle(img, c1, c2, color, thickness=1)
+    cv2.rectangle(img, c1, c2, color, thickness=2)
     if label:
         tf = max(tl - 1, 1)  # font thickness
-        tf = 1
+        tf = 2
         t_size = cv2.getTextSize(label, 0, fontScale=1, thickness=tf)[0]
         c2 = c1[0] + t_size[0], c1[1] - t_size[1] - 3
         #cv2.rectangle(img, c1, c2, color, 1)  # filled
-        cv2.putText(img, label, (c1[0], c1[1] - 2), 0,0.25, color, thickness=tf, lineType=cv2.LINE_AA)
+        cv2.putText(img, label, (c1[0], c1[1] - 2), 0,0.75, color, thickness=tf, lineType=cv2.LINE_AA)
 
 
 def weights_init_normal(m):

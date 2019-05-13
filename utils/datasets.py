@@ -163,15 +163,20 @@ class load_images_and_labels():  # for training
                 labels[:, 4] = ratio * labels[:,4] + padh
                 durations = []
                 pitchs = []
+               # for i in labels0[:,5]:
+               #    if float(i)==float(1):
+               #        durations.append(9)
+               #    elif str(i) not in name_classes and str(i)!='0.0':
+               #        durations.append(6)
+               #    else:
+               #        for idx,j in enumerate(name_classes):
+               #            if float(i)== float(j):
+               #              durations.append(idx)
                 for i in labels0[:,5]:
-                   if float(i)==float(1):
-                       durations.append(9)
-                   elif str(i) not in name_classes and str(i)!='0.0':
-                       durations.append(6)
-                   else:
-                       for idx,j in enumerate(name_classes):
-                           if float(i)== float(j):
-                             durations.append(idx)
+                    if str(int(i)) in name_classes:
+                        durations.append(int(i))
+                    else:
+                        durations.append(10)
                 ##超出音高范围或者没有音高
                 for i in labels0[:,6]:
                     if str(int(i)) in pitch_classes:

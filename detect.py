@@ -22,7 +22,7 @@ parser.add_argument('-class_path', type=str, default=f_path + 'data/new_omr.name
 parser.add_argument('-conf_thres', type=float, default=0.3, help='object confidence threshold')
 parser.add_argument('-nms_thres', type=float, default=0.50, help='iou threshold for non-maximum suppression')
 parser.add_argument('-batch_size', type=int, default=1, help='size of the batches')
-parser.add_argument('-img_size', type=int, default=64 *36, help='size of each image dimension')
+parser.add_argument('-img_size', type=int, default= 32*36, help='size of each image dimension')
 opt = parser.parse_args()
 print(opt)
 
@@ -34,7 +34,7 @@ def main(opt):
     # Load model
     model = Darknet(opt.cfg, opt.img_size)
 
-    weights_path = f_path + 'weights/best.pt'
+    weights_path = f_path + 'weights/latest.pt'
     if weights_path.endswith('.weights'):  # saved in darknet format
         load_weights(model, weights_path)
    # else:  # endswith('.pt'), saved in pytorch format
@@ -131,8 +131,12 @@ def main(opt):
 
                 if opt.plot_flag:
                     # Add the bbox to the plot
-                    label = '%s %d %d' % (classes[int(cls_pred)] ,int(duration_pred),int(pitch_pred))
-                    
+                    if int(cls_pred) == 8:
+                        label = '%s%d%d' % (classes[int(cls_pred)].split(':')[-1] ,int(duration_pred),int(pitch_pred))
+                    elif int(cls_pred) == 9:
+                        label = '%s%d ' % (classes[int(cls_pred)].split(':')[-1] ,int(duration_pred))
+                    else:
+                        label = '%s' % (classes[int(cls_pred)].split(':')[-1] )
                     color = bbox_colors[int(np.where(unique_classes == int(cls_pred))[0])]
                     plot_one_box([x1, y1, x2, y2], img, label=label, color=color)
 
