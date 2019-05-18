@@ -33,6 +33,8 @@ duration_acc :0.963
 - [x] get pitch
 - [x] complicated music sheet
 
-- yolo add pitch classification
-- more robust
+### 生成标签步骤
+1.通过svg生成乐谱图像和坐标信息。
+2.在svg生成标签的基础上集合mxl，生成具有时值、音高的符号信息。
+
 
