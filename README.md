@@ -1,18 +1,28 @@
 metric:
 
-accidental: 0.79
+timesig:0.82
 
-clef: 0.95
+sharp:0.96
 
-keysig:0.6
+flat:0.93
 
-rest:0.80
+natural:0.92
+
+clefg: 0.98
+
+clefG:0.96
+
+clefc:0.86
+
+barline:0.9
+
+rest:0.92
+
+note:0.94
 
 slursegment:0.44
 
-timesig:0.7789
-
-note:0.8691
+pitch_acc :0.92
 
 duration_acc :0.963
 
