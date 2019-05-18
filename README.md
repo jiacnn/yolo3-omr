@@ -34,7 +34,7 @@ duration_acc :0.963
 - [x] complicated music sheet
 
 ### 生成标签步骤
-1.通过svg生成乐谱图像和坐标信息。
-2.在svg生成标签的基础上集合mxl，生成具有时值、音高的符号信息。
-
+- 1.phantomjs 用svg生成txt. phantomjs/svg.js
+- 2.通过svg生成乐谱图像。
+- 3.在svg生成标签的基础上集合mxl，生成具有时值、音高的符号信息。pythontools/
 

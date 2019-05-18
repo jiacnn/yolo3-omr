@@ -6,7 +6,7 @@
 *.heic
 *.JPG
 *.TIF
-*.png
+#*.png
 *.HEIC
 *.weights
 *.ipynb
