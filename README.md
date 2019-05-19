@@ -40,3 +40,6 @@ duration_acc :0.963
 - 2.通过svg生成乐谱图像。
 - 3.在svg生成标签的基础上集合mxl，生成具有时值、音高的符号信息。pythontools/
 
+-----------
+phantomjs : 需要打开losthost，python3 -m http.server 8888
+
