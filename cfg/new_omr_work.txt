@@ -15,16 +15,16 @@
 
 小类:
 Note类中的时值类: 共10类
-0: eighth
-1: quarter
-2: 16th
-3: half
-4: quarter-dot
-5: eighth-dot
-6: half-dot
-7: whole
-8: 32nd
-100: others
+ eighth       3
+ quarter      5
+ 16th        2
+ half        7
+ quarter-dot 6
+ eighth-dot  4
+ half-dot    8
+ whole      9
+ 32nd       1
+ others
 
 Note类中的音高相对位置类: 共21类
 -5至15
