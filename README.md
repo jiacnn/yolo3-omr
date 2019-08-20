@@ -43,3 +43,6 @@ duration_acc :0.963
 -----------
 phantomjs : 需要打开losthost，python3 -m http.server 8888
 
+-------
+you can download the final_model by https://drive.google.com/open?id=1i0LnwyMSHzBHKUs54fk5ratZJ9GIbXCX
+
